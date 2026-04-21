@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thalos Robotics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="Favicon.pngg">
+  <link rel="apple-touch-icon" href="Favicon.png">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --navy:   #060f1e;
+      --deep:   #0a1628;
+      --mid:    #0d2040;
+      --cyan:   #00c8ff;
+      --cyan2:  #00a8d8;
+      --slate:  #a8ccd8;
+      --muted:  #5a7a8a;
+      --white:  #f0f8ff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.4rem 3rem;
+      background: rgba(6,15,30,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0,200,255,0.08);
+    }
+
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--white);
+      text-decoration: none;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-logo span { color: var(--cyan); }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--slate);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--cyan); }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .hero-glow {
+      position: absolute;
+      top: 20%;
+      right: -5%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,200,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-tag {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(4rem, 10vw, 9rem);
+      font-weight: 900;
+      line-height: 0.9;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.4s forwards;
+    }
+
+    .hero-title .line2 { color: var(--cyan); display: block; }
+
+    .hero-sub {
+      max-width: 480px;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--slate);
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.6s forwards;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.8s forwards;
+    }
+
+    .btn-primary {
+      background: var(--cyan);
+      color: var(--navy);
+      padding: 0.85rem 2rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .btn-primary:hover { background: var(--cyan2); transform: translateY(-2px); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--cyan);
+      padding: 0.85rem 2rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 1px solid var(--cyan);
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .btn-outline:hover { background: rgba(0,200,255,0.08); transform: translateY(-2px); }
+
+    /* ROV SVG illustration */
+    .hero-rov {
+      position: absolute;
+      right: 6%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 340px;
+      opacity: 0;
+      animation: fadeIn 1.2s 1s forwards;
+    }
+
+    /* ── SECTION BASE ── */
+    section {
+      position: relative;
+      z-index: 1;
+      padding: 7rem 3rem;
+    }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+
+    .divider {
+      width: 48px;
+      height: 2px;
+      background: var(--cyan);
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── ABOUT ── */
+    #about { background: var(--deep); }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .about-text p {
+      color: var(--slate);
+      line-height: 1.8;
+      margin-bottom: 1.2rem;
+      font-size: 0.97rem;
+    }
+
+    .about-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .stat-card {
+      border: 1px solid rgba(0,200,255,0.15);
+      padding: 1.8rem;
+      background: rgba(0,200,255,0.03);
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .stat-card:hover {
+      border-color: rgba(0,200,255,0.4);
+      background: rgba(0,200,255,0.06);
+    }
+
+    .stat-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--cyan);
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── MISSION ── */
+    #mission { background: var(--navy); }
+
+    .mission-inner { max-width: 1100px; margin: 0 auto; }
+
+    .tasks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .task-card {
+      background: var(--mid);
+      border-left: 3px solid var(--cyan);
+      padding: 2rem;
+      transition: transform 0.2s;
+    }
+
+    .task-card:hover { transform: translateY(-4px); }
+
+    .task-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: rgba(0,200,255,0.2);
+      margin-bottom: 0.8rem;
+    }
+
+    .task-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--white);
+      margin-bottom: 0.6rem;
+    }
+
+    .task-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── COMPETITION ── */
+    #competition { background: var(--deep); }
+
+    .comp-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    .comp-details p {
+      color: var(--slate);
+      line-height: 1.8;
+      font-size: 0.97rem;
+      margin-bottom: 1rem;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .tl-item {
+      display: flex;
+      gap: 1.5rem;
+      padding-bottom: 2rem;
+      position: relative;
+    }
+
+    .tl-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 14px;
+      top: 28px;
+      bottom: 0;
+      width: 1px;
+      background: rgba(0,200,255,0.2);
+    }
+
+    .tl-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--cyan);
+      background: var(--navy);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tl-dot-inner {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+    }
+
+    .tl-content {}
+    .tl-period { font-size: 0.75rem; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.2rem; }
+    .tl-event { font-size: 0.95rem; font-weight: 500; color: var(--white); }
+    .tl-detail { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* ── JOIN ── */
+    #join { background: var(--navy); }
+
+    .join-inner { max-width: 1100px; margin: 0 auto; }
+
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 3rem 0;
+    }
+
+    .role-card {
+      background: var(--deep);
+      border: 1px solid rgba(0,200,255,0.1);
+      padding: 1.8rem 1.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .role-card:hover {
+      border-color: var(--cyan);
+      transform: translateY(-3px);
+    }
+
+    .role-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .role-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--white);
+      margin-bottom: 0.4rem;
+    }
+
+    .role-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .join-cta {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .join-email {
+      font-size: 0.9rem;
+      color: var(--slate);
+    }
+
+    .join-email a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+
+    /* ── CONTACT ── */
+    #contact {
+      background: var(--mid);
+      text-align: center;
+      padding: 5rem 3rem;
+    }
+
+    .contact-inner { max-width: 600px; margin: 0 auto; }
+
+    .contact-inner .section-title { margin-bottom: 1rem; }
+
+    .contact-inner p {
+      color: var(--slate);
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+
+    .contact-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .contact-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      border: 1px solid rgba(0,200,255,0.2);
+      color: var(--slate);
+      font-size: 0.82rem;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .contact-chip:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--navy);
+      border-top: 1px solid rgba(0,200,255,0.08);
+      padding: 2rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    footer .logo {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    footer .logo span { color: var(--cyan); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(-50%) translateX(0px); }
+      50%       { transform: translateY(-50%) translateX(-12px); }
+    }
+
+    .hero-rov { animation: fadeIn 1.2s 1s forwards, float 6s 2s ease-in-out infinite; }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s, transform 0.7s;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      section { padding: 4rem 1.5rem; }
+      #hero { padding: 0 1.5rem; }
+      .hero-title { font-size: 3.5rem; }
+      .about-grid, .comp-inner { grid-template-columns: 1fr; gap: 3rem; }
+      .hero-rov { display: none; }
+      footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#hero" class="nav-logo">
+  <img src="Favicon.png" alt="Thalos Robotics" style="height: 64px; width: 64px; object-fit: contain; margin-right: 0.6rem; vertical-align: middle;">
+  Thalos <span>Robotics</span>
+</a>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#mission">Mission</a></li>
+    <li><a href="#competition">Competition</a></li>
+    <li><a href="#join">Join</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="https://instagram.com/thalosrobotics" target="_blank" style="font-size: 1.1rem;"><i class="fa-brands fa-instagram"></i></a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+
+  <p class="hero-tag">Silicon Valley · 2026-2027 MATE ROV Season</p>
+  <h1 class="hero-title">
+    THALOS
+    <span class="line2">ROBOTICS</span>
+  </h1>
+  <p class="hero-sub">A community-based underwater robotics team building ROVs, solving real-world environmental missions, and competing nationally. Open to all high schoolers in Silicon Valley.</p>
+  <div class="hero-actions">
+    <a href="https://forms.gle/yVy1SwmJrFH3ZqKx7" target="_blank" class="btn-primary">Join the Team</a>
+    <a href="#about" class="btn-outline">Learn More</a>
+  </div>
+
+  <!-- ROV SVG -->
+  <svg class="hero-rov" viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg">
+    <!-- Glow ring -->
+    <circle cx="170" cy="170" r="140" fill="rgba(0,200,255,0.04)" stroke="rgba(0,200,255,0.12)" stroke-width="1"/>
+    <circle cx="170" cy="170" r="110" fill="none" stroke="rgba(0,200,255,0.06)" stroke-width="1" stroke-dasharray="4 8"/>
+
+    <!-- Wave lines -->
+    <path d="M60 200 Q110 188 170 200 Q230 212 280 200" fill="none" stroke="rgba(0,200,255,0.15)" stroke-width="1.5"/>
+    <path d="M60 215 Q110 203 170 215 Q230 227 280 215" fill="none" stroke="rgba(0,200,255,0.08)" stroke-width="1"/>
+
+    <!-- ROV body -->
+    <rect x="118" y="154" width="104" height="52" rx="6" fill="#0a2540" stroke="#00c8ff" stroke-width="2"/>
+    <!-- Body details -->
+    <line x1="152" y1="154" x2="152" y2="206" stroke="rgba(0,200,255,0.3)" stroke-width="1"/>
+    <line x1="188" y1="154" x2="188" y2="206" stroke="rgba(0,200,255,0.3)" stroke-width="1"/>
+
+    <!-- Camera -->
+    <circle cx="128" cy="180" r="9" fill="#00c8ff"/>
+    <circle cx="130" cy="177" r="3.5" fill="white" opacity="0.9"/>
+
+    <!-- Status LED -->
+    <circle cx="212" cy="160" r="4.5" fill="#00ff88"/>
+
+    <!-- Thruster TL -->
+    <line x1="118" y1="154" x2="90" y2="126" stroke="#00c8ff" stroke-width="1.5"/>
+    <circle cx="90" cy="126" r="11" fill="#0a2540" stroke="#00c8ff" stroke-width="1.5"/>
+    <line x1="80" y1="126" x2="100" y2="126" stroke="#00c8ff" stroke-width="1.2"/>
+    <line x1="90" y1="116" x2="90" y2="136" stroke="#00c8ff" stroke-width="1.2"/>
+
+    <!-- Thruster TR -->
+    <line x1="222" y1="154" x2="250" y2="126" stroke="#00c8ff" stroke-width="1.5"/>
+    <circle cx="250" cy="126" r="11" fill="#0a2540" stroke="#00c8ff" stroke-width="1.5"/>
+    <line x1="240" y1="126" x2="260" y2="126" stroke="#00c8ff" stroke-width="1.2"/>
+    <line x1="250" y1="116" x2="250" y2="136" stroke="#00c8ff" stroke-width="1.2"/>
+
+    <!-- Thruster BL -->
+    <line x1="118" y1="206" x2="90" y2="234" stroke="#00c8ff" stroke-width="1.5"/>
+    <circle cx="90" cy="234" r="11" fill="#0a2540" stroke="#00c8ff" stroke-width="1.5"/>
+    <line x1="80" y1="234" x2="100" y2="234" stroke="#00c8ff" stroke-width="1.2"/>
+    <line x1="90" y1="224" x2="90" y2="244" stroke="#00c8ff" stroke-width="1.2"/>
+
+    <!-- Thruster BR -->
+    <line x1="222" y1="206" x2="250" y2="234" stroke="#00c8ff" stroke-width="1.5"/>
+    <circle cx="250" cy="234" r="11" fill="#0a2540" stroke="#00c8ff" stroke-width="1.5"/>
+    <line x1="240" y1="234" x2="260" y2="234" stroke="#00c8ff" stroke-width="1.2"/>
+    <line x1="250" y1="224" x2="250" y2="244" stroke="#00c8ff" stroke-width="1.2"/>
+
+    <!-- Tether -->
+    <path d="M218 154 Q240 130 232 100" fill="none" stroke="rgba(0,200,255,0.4)" stroke-width="1.5"/>
+
+    <!-- Bubbles -->
+    <circle cx="86" cy="110" r="4" fill="none" stroke="rgba(0,200,255,0.5)" stroke-width="1"/>
+    <circle cx="92" cy="96" r="3" fill="none" stroke="rgba(0,200,255,0.4)" stroke-width="1"/>
+    <circle cx="84" cy="84" r="2" fill="none" stroke="rgba(0,200,255,0.3)" stroke-width="1"/>
+    <circle cx="254" cy="110" r="3.5" fill="none" stroke="rgba(0,200,255,0.5)" stroke-width="1"/>
+    <circle cx="248" cy="97" r="2.5" fill="none" stroke="rgba(0,200,255,0.4)" stroke-width="1"/>
+    <circle cx="256" cy="85" r="2" fill="none" stroke="rgba(0,200,255,0.3)" stroke-width="1"/>
+  </svg>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-grid">
+    <div class="about-text reveal">
+      <p class="section-label">Who We Are</p>
+      <h2 class="section-title">Built from the ground up, by students.</h2>
+      <div class="divider"></div>
+      <p>Thalos Robotics is a brand new community-based underwater robotics team in the South San Francisco Bay Area. We are completely independent: not affiliated with any single school, and open to all high schoolers in the region.</p>
+      <p>Our team is organized like a real engineering company, with subteams covering mechanical design, electrical systems, software, and technical documentation. Every member contributes meaningfully to both the build and the competition.</p>
+      <p>We are currently recruiting founding members for our inaugural 2026–2027 MATE ROV Competition season. This is your chance to be part of something from day one.</p>
+    </div>
+    <div class="about-stats reveal">
+      <div class="stat-card">
+        <div class="stat-number">2026</div>
+        <div class="stat-label">Founded</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">4</div>
+        <div class="stat-label">Subteams</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">MATE</div>
+        <div class="stat-label">Competition</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">ROV</div>
+        <div class="stat-label">Vehicle Type</div>
+      </div>
+    </div>
+  </div>
+    </div>
+  </div>
+
+  <!-- MENTOR -->
+  <div class="mentor-bar reveal" style="max-width: 1100px; margin: 4rem auto 0; border: 1px solid rgba(0,200,255,0.15); background: rgba(0,200,255,0.03); padding: 2rem 2.5rem; display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+    <div style="width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--cyan); background: var(--mid); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+      <span style="font-size: 1.4rem;">⚛️</span>
+    </div>
+    <div style="flex: 1; min-width: 200px;">
+      <p style="font-size: 0.72rem; letter-spacing: 3px; text-transform: uppercase; color: var(--cyan); margin-bottom: 0.3rem;">Team Mentor</p>
+      <p style="font-size: 1.05rem; font-weight: 500; color: var(--white); margin-bottom: 0.3rem;">Kedar Sangam</p>
+      <p style="font-size: 0.85rem; color: var(--muted); line-height: 1.6;">Retired physicist with extensive experience in electronics and hardware engineering. Kedar brings decades of real-world technical expertise to guide the team through underwater physics, sensor integration, and ROV design.</p>
+    </div>
+    <a href="https://www.linkedin.com/in/kedarsangam/" target="_blank" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem; border: 1px solid rgba(0,200,255,0.2); color: var(--slate); font-size: 0.82rem; text-decoration: none; transition: border-color 0.2s, color 0.2s; white-space: nowrap;" onmouseover="this.style.borderColor='var(--cyan)'; this.style.color='var(--cyan)'" onmouseout="this.style.borderColor='rgba(0,200,255,0.2)'; this.style.color='var(--slate)'">
+      <i class="fa-brands fa-linkedin"></i> View LinkedIn
+    </a>
+  </div>
+
+</section>
+
+<!-- MISSION -->
+<section id="mission">
+</section>
+
+<!-- MISSION -->
+<section id="mission">
+  <div class="mission-inner">
+    <div class="reveal">
+      <p class="section-label">What We Do</p>
+      <h2 class="section-title">Real missions.<br>Real engineering.</h2>
+      <div class="divider"></div>
+      <p style="color: var(--slate); max-width: 600px; line-height: 1.8; font-size: 0.97rem;">The MATE ROV Competition challenges teams to design and pilot underwater robots to complete real-world environmental missions. Each task requires genuine engineering: from gripper mechanisms to sensor integration to buoyancy-controlled floats.</p>
+    </div>
+    <div class="tasks-grid">
+      <div class="task-card reveal">
+        <div class="task-num">01</div>
+        <div class="task-name">Coral Collection</div>
+        <div class="task-desc">Navigate the ROV to the pool floor and retrieve specimen objects using a custom-built gripper arm.</div>
+      </div>
+      <div class="task-card reveal">
+        <div class="task-num">02</div>
+        <div class="task-name">Sensor Deployment</div>
+        <div class="task-desc">Carry and precisely place a simulated instrument package at an underwater target location.</div>
+      </div>
+      <div class="task-card reveal">
+        <div class="task-num">03</div>
+        <div class="task-name">Infrastructure Install</div>
+        <div class="task-desc">Simulate offshore energy infrastructure tasks using the ROV's manipulator systems.</div>
+      </div>
+      <div class="task-card reveal">
+        <div class="task-num">04</div>
+        <div class="task-name">MATE Floats</div>
+        <div class="task-desc">Deploy a buoyancy-controlled float that ascends and descends to specific depths autonomously or on command.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPETITION -->
+<section id="competition">
+  <div class="comp-inner">
+    <div class="comp-details reveal">
+      <p class="section-label">The Competition</p>
+      <h2 class="section-title">MATE ROV<br>Competition</h2>
+      <div class="divider"></div>
+      <p>The MATE ROV Competition is one of the most prestigious student underwater robotics competitions in the world, with teams competing from over 17 countries. Our target is the Ranger class, designed for high school teams with robotics experience.</p>
+      <p>Scoring covers three areas equally: in-water mission performance, technical documentation and engineering presentation, and a full safety inspection. The best teams are both great engineers and great communicators.</p>
+      <p>Regional qualifiers take place in spring. Top regional finishers advance to the annual World Championship.</p>
+      <a href="https://materovcompetition.org" target="_blank" class="btn-outline" style="display:inline-block; margin-top:1rem;">Learn About MATE ROV ↗</a>
+    </div>
+    <div class="timeline reveal">
+      <p class="section-label">2026–2027 Timeline</p>
+      <br>
+      <div class="tl-item">
+        <div class="tl-dot"><div class="tl-dot-inner"></div></div>
+        <div class="tl-content">
+          <div class="tl-period">Now - Summer 2026</div>
+          <div class="tl-event">Team Recruitment</div>
+          <div class="tl-detail">Building our founding roster across all subteams</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"><div class="tl-dot-inner"></div></div>
+        <div class="tl-content">
+          <div class="tl-period">Fall 2026</div>
+          <div class="tl-event">Design & Build</div>
+          <div class="tl-detail">Mission manual released, ROV design begins</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"><div class="tl-dot-inner"></div></div>
+        <div class="tl-content">
+          <div class="tl-period">Winter 2026–27</div>
+          <div class="tl-event">Pool Testing</div>
+          <div class="tl-detail">Weekly water tests, documentation writing</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"><div class="tl-dot-inner"></div></div>
+        <div class="tl-content">
+          <div class="tl-period">Spring 2027</div>
+          <div class="tl-event">Regional Competition</div>
+          <div class="tl-detail">Compete at the closest MATE regional event</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"><div class="tl-dot-inner"></div></div>
+        <div class="tl-content">
+          <div class="tl-period">June 2027</div>
+          <div class="tl-event">World Championship</div>
+          <div class="tl-detail">For teams advancing from regionals</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- JOIN -->
+<section id="join">
+  <div class="join-inner">
+    <div class="reveal">
+      <p class="section-label">Get Involved</p>
+      <h2 class="section-title">We're looking for people<br>who want to create.</h2>
+      <div class="divider"></div>
+      <p style="color: var(--slate); max-width: 580px; line-height: 1.8; font-size: 0.97rem;">No single background required. We need people across every discipline: from hands-on builders to programmers to writers. Prior robotics experience is preferred but a foundation in electronics or engineering is enough to get started.</p>
+    </div>
+    <div class="roles-grid">
+      <div class="role-card reveal">
+        <div class="role-icon">⚙️</div>
+        <div class="role-title">Mechanical</div>
+        <div class="role-desc">Frame design, gripper arm, buoyancy tuning, and float construction.</div>
+      </div>
+      <div class="role-card reveal">
+        <div class="role-icon">⚡</div>
+        <div class="role-title">Electrical</div>
+        <div class="role-desc">Wiring, power systems, ESC setup, waterproof penetrators, and safety inspection.</div>
+      </div>
+      <div class="role-card reveal">
+        <div class="role-icon">💻</div>
+        <div class="role-title">Software</div>
+        <div class="role-desc">ROV control systems, gamepad input, camera feed, and float depth logic.</div>
+      </div>
+      <div class="role-card reveal">
+        <div class="role-icon">📄</div>
+        <div class="role-title">Documentation</div>
+        <div class="role-desc">Engineering notebook, technical report, presentation prep, and marketing display.</div>
+      </div>
+      <div class="role-card reveal">
+        <div class="role-icon">🎮</div>
+        <div class="role-title">Pilot</div>
+        <div class="role-desc">ROV pilot and co-pilot: drives the vehicle and manages the tether during competition.</div>
+      </div>
+    </div>
+    <div class="join-cta reveal">
+      <a href="https://forms.gle/yVy1SwmJrFH3ZqKx7" target="_blank" class="btn-primary">Fill Out Interest Form</a>
+      <p class="join-email">Or email us at <a href="mailto:thalosrobotics@gmail.com">thalosrobotics@gmail.com</a></p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-inner reveal">
+    <p class="section-label">Contact</p>
+    <h2 class="section-title">Let's build something.</h2>
+    <p>Whether you're a student looking to join, a sponsor interested in supporting the team, or just curious about what we're doing; We'd love to hear from you.</p>
+    <a href="https://forms.gle/yVy1SwmJrFH3ZqKx7" target="_blank" class="btn-primary">Interest Form</a>
+    <div class="contact-links">
+      <a href="mailto:thalosrobotics@gmail.com" class="contact-chip">✉ thalosrobotics@gmail.com</a>
+      <a href="https://materovcompetition.org" target="_blank" class="contact-chip">🌊 materovcompetition.org</a>
+      <a href="https://instagram.com/thalosrobotics" target="_blank" class="contact-chip"><i class="fa-brands fa-instagram"></i> thalosrobotics</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+<span class="logo" style="display: flex; align-items: center; gap: 0.6rem;">
+  <img src="Favicon.png" alt="Thalos Robotics" style="height: 32px; width: 32px; object-fit: contain;">
+  <span><span style="color: var(--white);">Thalos</span> <span style="color: var(--cyan);">Robotics</span></span>
+</span>
+  <span>© 2026 Thalos Robotics. All rights reserved.</span>
+  <span>thalosrobotics@gmail.com</span>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
